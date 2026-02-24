@@ -4,13 +4,13 @@ import { Workout } from "./Workout";
 import { insertTestData } from "./testData";
 
 export class DB {
-    private db: Database | null = null;
+    db?: Database = $state(undefined);
 
     constructor() {}
 
-    conn(): Database {
+    async conn(): Promise<Database> {
         if (!this.db) {
-            this.init();
+            await this.init();
         }
         return this.db!;
     }
@@ -20,7 +20,7 @@ export class DB {
             this.db = await Database.load("sqlite:data.db");
 
             await Workout.initTable(this.db);
-            insertTestData(this.db);
+            await insertTestData(this.db);
         } catch (err) {
             console.error("Error initializing DB:", err);
         }
@@ -28,5 +28,5 @@ export class DB {
 }
 
 const database = new DB();
-database.init();
+await database.init();
 export default database;

@@ -4,8 +4,8 @@ import { Workout } from "$lib/database/Workout";
 
 export const load: PageLoad = async () => {
     const db = await database.conn();
-    const workouts = await Workout.getAll(db);
+    const nextWorkout = await Workout.createNext(db);
     return {
-        workouts,
+        nextWorkout,
     };
 };

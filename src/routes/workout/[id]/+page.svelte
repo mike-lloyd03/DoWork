@@ -1,92 +1,105 @@
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
-	import { page } from '$app/state'; // To get the ID
-	import { ArrowLeft, Timer, CircleCheck } from 'lucide-svelte';
-	import ExerciseRow from '$lib/components/ExerciseRow.svelte';
+    import { onMount, onDestroy } from "svelte";
+    import ExerciseRow from "$lib/components/workout/ExerciseRow.svelte";
+    import type { PageProps } from "./$types";
+    import { Workout, type WorkoutModel } from "$lib/database/Workout";
+    import { DateTime } from "luxon";
+    import database from "$lib/database/DB.svelte";
+    import Footer from "$lib/components/workout/Footer.svelte";
+    import AddNote from "$lib/components/workout/AddNote.svelte";
+    import Header from "$lib/components/workout/Header.svelte";
+    import FooterButton from "$lib/components/workout/FooterButton.svelte";
+    import { goto, invalidate } from "$app/navigation";
 
-	// 1. STATE MANAGEMENT
-	let timer = $state(0);
-	let timerInterval: any;
+    let { data }: PageProps = $props();
 
-	// Mock Data (In reality, fetch this based on page.params.id)
-	let workout = $state({
-		name: 'Workout A',
-		exercises: [
-			{ id: 1, name: 'Squat', weight: 225, sets: [null, null, null, null, null] },
-			{ id: 2, name: 'Bench Press', weight: 135, sets: [null, null, null, null, null] },
-			{ id: 3, name: 'Barbell Row', weight: 135, sets: [null, null, null, null, null] }
-		]
-	});
+    let timer = $state(0);
+    let timerInterval: any;
+    let showDelete = $state(false);
+    let editMode = $state(false);
 
-	// 2. TIMER LOGIC
-	onMount(() => {
-		timerInterval = setInterval(() => {
-			timer++;
-		}, 1000);
-	});
+    // svelte-ignore state_referenced_locally
+    let workout: WorkoutModel = $state(data.workout!);
 
-	onDestroy(() => {
-		if (timerInterval) clearInterval(timerInterval);
-	});
+    $effect(() => {
+        workout = data.workout!;
+    });
 
-	function formatTime(seconds: number) {
-		const m = Math.floor(seconds / 60);
-		const s = seconds % 60;
-		return `${m}:${s < 10 ? '0' : ''}${s}`;
-	}
+    // 2. TIMER LOGIC
+    onMount(() => {
+        timerInterval = setInterval(() => {
+            timer++;
+        }, 1000);
+    });
 
-	function resetRestTimer() {
-		// In a real app, this might start a specific 90s/3min countdown
-		// For now, we just highlight it to show interaction
-		timer = 0;
-	}
+    onDestroy(() => {
+        if (timerInterval) clearInterval(timerInterval);
+    });
 
-	// 3. FINISH LOGIC
-	function finishWorkout() {
-		// TODO: Save to SQLite
-		console.log('Saving workout:', workout);
-		// Navigate back
-		history.back();
-	}
+    function deleteWorkout() {
+        showDelete = true;
+    }
+
+    async function deleteWorkoutConfirm() {
+        let db = await database.conn();
+        if (workout.id) {
+            let del = await Workout.get(db, workout.id);
+            del.delete(db);
+        }
+        goto("/history");
+    }
+
+    async function updateWorkout() {
+        let db = await database.conn();
+        if (workout.id) {
+            let updatedWorkout = new Workout(workout);
+            updatedWorkout.update(db);
+        }
+        await invalidate(`data:workout/${workout.id}`);
+        editMode = false;
+    }
+
+    async function cancelUpdate() {
+        await invalidate(`data:workout/${workout.id}`);
+        editMode = false;
+    }
 </script>
 
-<div class="min-h-screen bg-base-200 pb-32">
-	<div class="navbar bg-base-100 shadow-sm sticky top-0 z-50">
-		<div class="flex-none">
-			<button class="btn btn-ghost btn-circle" onclick={() => history.back()}>
-				<ArrowLeft size={24} />
-			</button>
-		</div>
-		<div class="flex-1">
-			<h1 class="text-lg font-bold px-2">{workout.name}</h1>
-		</div>
-		<div class="flex-none">
-			<button class="btn btn-ghost gap-2 font-mono text-lg text-primary" onclick={resetRestTimer}>
-				<Timer size={20} class="animate-pulse" />
-				{formatTime(timer)}
-			</button>
-		</div>
-	</div>
+<div class="bg-base-200 min-h-screen pb-32">
+    <Header workoutType={workout.type} />
 
-	<div class="p-4 space-y-4">
-		{#each workout.exercises as exercise (exercise.id)}
-			<ExerciseRow name={exercise.name} weight={exercise.weight} bind:sets={exercise.sets} />
-		{/each}
+    <div class="space-y-4 p-4">
+        {#if workout}
+            {#each workout.exercises as _, i (i)}
+                <ExerciseRow bind:exercise={workout.exercises[i]} {editMode} />
+            {/each}
+        {/if}
 
-		<button class="btn btn-ghost btn-block text-base-content/50 dashed border-2 border-base-300">
-			+ Add Workout Note
-		</button>
-	</div>
+        <AddNote />
+    </div>
 
-	<div
-		class="fixed bottom-0 left-0 right-0 p-4 bg-base-100 border-t border-base-300 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-40"
-	>
-		<button
-			class="btn btn-primary btn-block btn-lg shadow-lg gap-3 text-xl"
-			onclick={finishWorkout}
-		>
-			<CircleCheck size={24} strokeWidth={2.5} />
-			Finish Workout
-		</button>
-	</div>
+    <Footer>
+        <div class="flex justify-between gap-2">
+            {#if showDelete}
+                <FooterButton
+                    text="Yes"
+                    icon="octagonX"
+                    color="error"
+                    onclick={deleteWorkoutConfirm}
+                />
+                <FooterButton text="Cancel" icon="x" onclick={() => (showDelete = false)} />
+            {:else if editMode}
+                <FooterButton text="Save" icon="save" color="success" onclick={updateWorkout} />
+                <FooterButton text="Cancel" icon="octagonX" color="error" onclick={cancelUpdate} />
+            {:else}
+                <FooterButton
+                    text="Edit"
+                    icon="squarePen"
+                    color="warning"
+                    onclick={() => (editMode = true)}
+                />
+                <FooterButton text="Delete" icon="octagonX" color="error" onclick={deleteWorkout} />
+            {/if}
+        </div>
+    </Footer>
 </div>

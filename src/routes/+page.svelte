@@ -1,18 +1,16 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { Play, Trophy, Scale, History, Dumbbell } from '@lucide/svelte';
+	import { Play, Trophy, Scale, History } from '@lucide/svelte';
+	import type { PageProps } from './$types';
+    import {  getNextWorkoutPlan } from '$lib/utils';
+    import type { WorkoutPlan } from '$lib/types';
+    import type { WorkoutModel } from '$lib/database/Workout';
+    import WorkoutExercise from '$lib/components/WorkoutExercise.svelte';
 
-	let nextWorkout = $state({
-		id: 'workout-a',
-		name: 'Workout A',
-		lastPerformed: '3 days ago',
-		durationEstimate: '45 min',
-		exercises: [
-			{ name: 'Squat', sets: '5x5', weight: 225 },
-			{ name: 'Bench Press', sets: '5x5', weight: 135 },
-			{ name: 'Barbell Row', sets: '5x5', weight: 135 }
-		]
-	});
+	let { data }: PageProps = $props();
+
+    let nextWorkout: WorkoutModel = data.nextWorkout.data
+
 	let userStats = $state({
 		bodyweight: 185,
 		streak: 4
@@ -20,10 +18,10 @@
 </script>
 
 <div class="p-4 space-y-6 pb-24">
-	<div class="navbar bg-base-100 rounded-box shadow-sm min-h-[4rem]">
+	<div class="navbar bg-base-100 rounded-box shadow-sm min-h-16">
 		<div class="flex-1">
 			<a href={resolve('/')} class="btn btn-ghost text-xl font-black tracking-tighter text-primary">
-				doWork
+				DoWork
 			</a>
 		</div>
 		<div class="flex-none gap-2">
@@ -39,9 +37,9 @@
 		<div class="card-body p-6">
 			<div class="flex justify-between items-start mb-2">
 				<div>
-					<h2 class="card-title text-3xl font-bold">{nextWorkout.name}</h2>
+					<h2 class="card-title text-3xl font-bold">Workout {nextWorkout.type}</h2>
 					<p class="text-base-content/60 flex items-center gap-1 text-sm mt-1">
-						<History size={14} /> Last: {nextWorkout.lastPerformed}
+						<History size={14} /> Last: {123456}
 					</p>
 				</div>
 				<div class="badge badge-primary badge-lg font-bold">NEXT</div>
@@ -50,24 +48,9 @@
 			<div class="overflow-x-auto my-4 bg-base-200/50 rounded-xl p-2">
 				<table class="table table-zebra w-full">
 					<tbody>
-						{#each nextWorkout.exercises as exercise (exercise.name)}
-							<tr class="border-b-0">
-								<td class="w-10 p-2">
-									<div class="bg-base-100 p-2 rounded-lg text-primary">
-										<Dumbbell size={18} />
-									</div>
-								</td>
-								<td class="font-bold text-base">{exercise.name}</td>
-								<td class="text-right">
-									<div class="font-mono font-black text-lg">
-										{exercise.weight}<span class="text-xs font-normal text-base-content/60 ml-1"
-											>lb</span
-										>
-									</div>
-									<div class="text-xs text-base-content/50">{exercise.sets}</div>
-								</td>
-							</tr>
-						{/each}
+                {#each nextWorkout.exercises as exercise, i (i)}
+                        <WorkoutExercise {exercise}/>
+{/each}
 					</tbody>
 				</table>
 			</div>

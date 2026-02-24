@@ -1,22 +1,40 @@
 import Database from "@tauri-apps/plugin-sql";
+import { DateTime } from "luxon";
 
-export interface WorkoutModel {
+export interface WorkoutDB {
     id?: number;
-    date: string;
-    type: "A" | "B";
-    exercises: {
-        lift: Lift;
-        type: "warmup" | "working";
-        sets: {
-            weight: number;
-            targetReps: number;
-            completedReps: number;
-        }[];
-    }[];
+    startTime: string;
+    endTime?: string;
+    type: WorkoutType;
+    exerciseData: string;
     notes?: string;
 }
 
+export interface WorkoutModel {
+    id?: number;
+    startTime: DateTime;
+    endTime?: DateTime;
+    type: WorkoutType;
+    exercises: Exercise[];
+    notes?: string;
+}
+
+export interface Exercise {
+    lift: Lift;
+    warmupSets: Set[];
+    workingSets: Set[];
+    workingWeight: number;
+    success?: boolean;
+}
+
+export interface Set {
+    weight: number;
+    targetReps: number;
+    completedReps: number;
+}
+
 export type Lift = "squat" | "benchPress" | "barbellRow" | "ohp" | "deadlift";
+export type WorkoutType = "A" | "B";
 
 export class Workout {
     data: WorkoutModel;
@@ -27,24 +45,42 @@ export class Workout {
 
     static async initTable(db: Database) {
         console.log("Initializing workouts table");
+        // await db.execute("DROP TABLE workouts");
 
         const sql = `
             CREATE TABLE IF NOT EXISTS workouts (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                date TEXT NOT NULL,
+                startTime TEXT NOT NULL,
+                endTime TEXT,
                 type TEXT NOT NULL,
-                exercise_data TEXT NOT NULL,
+                exerciseData TEXT NOT NULL,
                 notes TEXT
             );
         `;
         await db.execute(sql);
     }
 
+    static fromDB(data: WorkoutDB) {
+        const model: WorkoutModel = {
+            id: data.id,
+            startTime: DateTime.fromISO(data.startTime),
+            endTime: data.endTime
+                ? DateTime.fromISO(data.startTime)
+                : undefined,
+            type: data.type,
+            notes: data.notes,
+            exercises: JSON.parse(data.exerciseData),
+        };
+        return new Workout(model);
+    }
+
     async create(db: Database) {
+        this.checkSuccess();
         const stmt =
-            "INSERT INTO workouts (date, type, exercise_data, notes) VALUES ($1, $2, $3, $4)";
+            "INSERT INTO workouts (startTime, endTime, type, exerciseData, notes) VALUES (?, ?, ?, ?, ?)";
         await db.execute(stmt, [
-            this.data.date,
+            this.data.startTime.toISO(),
+            this.data.endTime?.toISO() ?? undefined,
             this.data.type,
             JSON.stringify(this.data.exercises),
             this.data.notes,
@@ -57,28 +93,30 @@ export class Workout {
 
     static async get(db: Database, id: number): Promise<Workout> {
         const stmt = "SELECT * FROM workouts WHERE id = ? LIMIT 1";
-        const resp: WorkoutModel[] = await db.select(stmt, [id]);
+        const resp: WorkoutDB[] = await db.select(stmt, [id]);
 
         if (resp.length > 0) {
-            return new Workout(resp[0]);
+            return Workout.fromDB(resp[0]);
         }
         throw null;
     }
 
     static async getAll(db: Database): Promise<Workout[]> {
-        const stmt = "SELECT * FROM workouts ORDER BY date DESC";
-        const resp: WorkoutModel[] = await db.select(stmt);
+        const stmt = "SELECT * FROM workouts ORDER BY startTime DESC";
+        const resp: WorkoutDB[] = await db.select(stmt);
 
         return (resp || []).map((row) => {
-            return new Workout(row);
+            return Workout.fromDB(row);
         });
     }
 
     async update(db: Database) {
+        this.checkSuccess();
         const stmt =
-            "UPDATE workouts SET date = ?, type = ?, exercise_data = ?, notes = ? WHERE id = ?";
+            "UPDATE workouts SET startTime = ?, endTime = ?, type = ?, exerciseData = ?, notes = ? WHERE id = ?";
         await db.execute(stmt, [
-            this.data.date,
+            this.data.startTime.toISO(),
+            this.data.endTime?.toISO() ?? undefined,
             this.data.type,
             JSON.stringify(this.data.exercises),
             this.data.notes,
@@ -91,19 +129,213 @@ export class Workout {
         db.execute(stmt, [this.data.id]);
     }
 
+    checkSuccess() {
+        this.data.exercises.forEach((e, i) => {
+            this.data.exercises[i].success = e.workingSets.every(
+                (s) => s.completedReps == s.targetReps,
+            );
+        });
+    }
+
     static async getMaxLift(db: Database, liftName: Lift): Promise<number> {
         const sql = `
-        SELECT MAX(CAST(sets.value ->> 'weight' AS REAL)) as max_weight
-        FROM workouts,
-             json_each(workouts.exercise_data) as exercise,
-             json_each(exercise.value -> 'sets') as sets
-        WHERE 
-             exercise.value ->> 'lift' = ? 
-             AND sets.value ->> 'completed_reps' = sets.value ->> 'target_reps'
-             `;
+    SELECT MAX(CAST(sets.value ->> 'weight' AS REAL)) as max_weight
+    FROM workouts,
+         json_each(workouts.exerciseData) as exercise,
+         json_each(exercise.value -> 'workingSets') as sets
+    WHERE 
+         exercise.value ->> 'lift' = $1 
+         AND sets.value ->> 'completedReps' = sets.value ->> 'targetReps'
+    `;
 
-        const res: { max_weight: number } = await db.select(sql, [liftName]);
+        const res: { max_weight: number }[] = await db.select(sql, [liftName]);
 
-        return res.max_weight;
+        if (res && res.length > 0 && res[0].max_weight) {
+            return res[0].max_weight;
+        }
+
+        return 0;
+    }
+
+    static async getMostRecentLift(db: Database, lift: Lift): Promise<number> {
+        const sql = `
+    SELECT CAST(exercise.value ->> 'workingWeight' AS REAL) as recent_weight
+    FROM workouts,
+         json_each(workouts.exerciseData) as exercise
+    WHERE 
+         exercise.value ->> 'lift' = $1 
+         AND exercise.value ->> 'success' = 1
+    ORDER BY workouts.startTime DESC
+    LIMIT 1
+    `;
+
+        const res: { recent_weight: number }[] = await db.select(sql, [lift]);
+
+        if (res && res.length > 0) {
+            return res[0].recent_weight;
+        }
+
+        return 0;
+    }
+
+    static async getLast(
+        db: Database,
+        type: WorkoutType | undefined = undefined,
+    ) {
+        if (type) {
+            const stmt =
+                "SELECT * FROM workouts WHERE type = ? ORDER BY startTime DESC LIMIT 1";
+
+            const resp: WorkoutDB[] = await db.select(stmt, [type]);
+
+            if (resp.length > 0) {
+                return Workout.fromDB(resp[0]);
+            }
+        } else {
+            const stmt =
+                "SELECT * FROM workouts ORDER BY startTime DESC LIMIT 1";
+
+            const resp: WorkoutDB[] = await db.select(stmt);
+
+            if (resp.length > 0) {
+                return Workout.fromDB(resp[0]);
+            }
+        }
+        throw null;
+    }
+
+    static async getActive(db: Database) {
+        const stmt =
+            "SELECT * FROM workouts WHERE endTime is null ORDER BY startTime DESC LIMIT 1";
+
+        const resp: WorkoutDB[] = await db.select(stmt);
+
+        if (resp.length > 0) {
+            return Workout.fromDB(resp[0]);
+        }
+        return null;
+    }
+
+    static async createNext(db: Database): Promise<Workout> {
+        const lastWorkout = await this.getLast(db);
+        const startTime = DateTime.now();
+        let nextWorkoutType: WorkoutType;
+        const exercises: Exercise[] = [];
+
+        if (lastWorkout.data.type == "A") {
+            nextWorkoutType = "B";
+            const squatSets = await this.generateExercise(db, "squat");
+            const ohpSets = await this.generateExercise(db, "ohp");
+            const deadliftSets = await this.generateExercise(db, "deadlift");
+            exercises.push(squatSets);
+            exercises.push(ohpSets);
+            exercises.push(deadliftSets);
+        } else {
+            nextWorkoutType = "A";
+            const squatSets = await this.generateExercise(db, "squat");
+            const benchPressSets = await this.generateExercise(
+                db,
+                "benchPress",
+            );
+            const barbellRowSets = await this.generateExercise(
+                db,
+                "barbellRow",
+            );
+            exercises.push(squatSets);
+            exercises.push(benchPressSets);
+            exercises.push(barbellRowSets);
+        }
+
+        return new Workout({
+            startTime,
+            type: nextWorkoutType,
+            exercises,
+        });
+    }
+
+    static async generateExercise(db: Database, lift: Lift): Promise<Exercise> {
+        let mostRecentWeight = await this.getMostRecentLift(db, lift);
+        let workingWeight = mostRecentWeight + 5;
+
+        const workingSets = this.generateWorkingSets(lift, workingWeight);
+        const warmupSets = this.generateWarmupSets(lift, workingWeight);
+
+        return {
+            lift,
+            warmupSets,
+            workingSets,
+            workingWeight,
+        };
+    }
+
+    static generateWorkingSets(
+        lift: Lift,
+
+        workingWeight: number,
+    ): Set[] {
+        let sets = [];
+        let nSets = 5;
+        if (lift == "deadlift") {
+            nSets = 1;
+        }
+
+        for (let i = 0; i < nSets; i++) {
+            sets.push({
+                weight: workingWeight,
+                targetReps: 5,
+                completedReps: 0,
+            });
+        }
+        return sets;
+    }
+
+    static generateWarmupSets(lift: Lift, workingWeight: number): Set[] {
+        let startingWeight: number;
+        let sets: Set[] = [];
+
+        switch (lift) {
+            case "squat":
+                startingWeight = 45;
+            case "benchPress":
+                startingWeight = workingWeight * 0.5;
+            case "barbellRow":
+                startingWeight = workingWeight * 0.5;
+            case "ohp":
+                startingWeight = workingWeight * 0.5;
+            case "deadlift":
+                startingWeight = 135;
+        }
+
+        sets.push({
+            weight: startingWeight,
+            targetReps: 5,
+            completedReps: 0,
+        });
+
+        if (lift == "deadlift") {
+            const increment = 0.25;
+            for (let i = 0; i < 4; i++) {
+                sets.push({
+                    weight:
+                        startingWeight +
+                        (workingWeight - startingWeight) * increment * i,
+                    targetReps: 0,
+                    completedReps: 0,
+                });
+            }
+        } else {
+            const increment = 0.25;
+            for (let i = 0; i < 4; i++) {
+                sets.push({
+                    weight:
+                        startingWeight +
+                        (workingWeight - startingWeight) * increment * i,
+                    targetReps: 0,
+                    completedReps: 0,
+                });
+            }
+        }
+
+        return sets;
     }
 }
