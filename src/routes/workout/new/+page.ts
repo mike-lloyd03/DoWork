@@ -1,6 +1,7 @@
 import type { PageLoad } from "../new/$types";
 import database from "$lib/database/DB.svelte";
 import { Workout } from "$lib/database/Workout";
+import { DateTime } from "luxon";
 
 export const load: PageLoad = async () => {
     const db = await database.conn();
@@ -8,6 +9,8 @@ export const load: PageLoad = async () => {
         let workout = await Workout.getActive(db);
         if (workout == null) {
             workout = await Workout.createNext(db);
+            workout.data.startTime = DateTime.now();
+            await workout.create(db);
         }
 
         return {

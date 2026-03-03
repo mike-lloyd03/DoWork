@@ -12,7 +12,7 @@ export interface WorkoutDB {
 
 export interface WorkoutModel {
     id?: number;
-    startTime: DateTime;
+    startTime?: DateTime;
     endTime?: DateTime;
     type: WorkoutType;
     exercises: Exercise[];
@@ -30,7 +30,7 @@ export interface Exercise {
 export interface Set {
     weight: number;
     targetReps: number;
-    completedReps: number;
+    completedReps: number | null;
 }
 
 export type Lift = "squat" | "benchPress" | "barbellRow" | "ohp" | "deadlift";
@@ -50,7 +50,7 @@ export class Workout {
         const sql = `
             CREATE TABLE IF NOT EXISTS workouts (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                startTime TEXT NOT NULL,
+                startTime TEXT,
                 endTime TEXT,
                 type TEXT NOT NULL,
                 exerciseData TEXT NOT NULL,
@@ -79,7 +79,7 @@ export class Workout {
         const stmt =
             "INSERT INTO workouts (startTime, endTime, type, exerciseData, notes) VALUES (?, ?, ?, ?, ?)";
         await db.execute(stmt, [
-            this.data.startTime.toISO(),
+            this.data.startTime?.toISO() ?? undefined,
             this.data.endTime?.toISO() ?? undefined,
             this.data.type,
             JSON.stringify(this.data.exercises),
@@ -115,7 +115,7 @@ export class Workout {
         const stmt =
             "UPDATE workouts SET startTime = ?, endTime = ?, type = ?, exerciseData = ?, notes = ? WHERE id = ?";
         await db.execute(stmt, [
-            this.data.startTime.toISO(),
+            this.data.startTime?.toISO() ?? undefined,
             this.data.endTime?.toISO() ?? undefined,
             this.data.type,
             JSON.stringify(this.data.exercises),
@@ -132,7 +132,7 @@ export class Workout {
     checkSuccess() {
         this.data.exercises.forEach((e, i) => {
             this.data.exercises[i].success = e.workingSets.every(
-                (s) => s.completedReps == s.targetReps,
+                (s) => s.completedReps === s.targetReps,
             );
         });
     }
@@ -216,14 +216,16 @@ export class Workout {
         return null;
     }
 
-    static async createNext(db: Database): Promise<Workout> {
+    static async createNext(db: Database) {
         const lastWorkout = await this.getLast(db);
-        const startTime = DateTime.now();
-        let nextWorkoutType: WorkoutType;
+        const nextWorkoutType = lastWorkout.data.type == "A" ? "B" : "A";
+        return this.generateWorkout(db, nextWorkoutType);
+    }
+
+    static async generateWorkout(db: Database, type: WorkoutType) {
         const exercises: Exercise[] = [];
 
-        if (lastWorkout.data.type == "A") {
-            nextWorkoutType = "B";
+        if (type == "B") {
             const squatSets = await this.generateExercise(db, "squat");
             const ohpSets = await this.generateExercise(db, "ohp");
             const deadliftSets = await this.generateExercise(db, "deadlift");
@@ -231,7 +233,6 @@ export class Workout {
             exercises.push(ohpSets);
             exercises.push(deadliftSets);
         } else {
-            nextWorkoutType = "A";
             const squatSets = await this.generateExercise(db, "squat");
             const benchPressSets = await this.generateExercise(
                 db,
@@ -247,8 +248,7 @@ export class Workout {
         }
 
         return new Workout({
-            startTime,
-            type: nextWorkoutType,
+            type,
             exercises,
         });
     }
@@ -283,7 +283,7 @@ export class Workout {
             sets.push({
                 weight: workingWeight,
                 targetReps: 5,
-                completedReps: 0,
+                completedReps: null,
             });
         }
         return sets;
@@ -309,7 +309,7 @@ export class Workout {
         sets.push({
             weight: startingWeight,
             targetReps: 5,
-            completedReps: 0,
+            completedReps: null,
         });
 
         if (lift == "deadlift") {
@@ -319,8 +319,8 @@ export class Workout {
                     weight:
                         startingWeight +
                         (workingWeight - startingWeight) * increment * i,
-                    targetReps: 0,
-                    completedReps: 0,
+                    targetReps: 5,
+                    completedReps: null,
                 });
             }
         } else {
@@ -330,8 +330,8 @@ export class Workout {
                     weight:
                         startingWeight +
                         (workingWeight - startingWeight) * increment * i,
-                    targetReps: 0,
-                    completedReps: 0,
+                    targetReps: 5,
+                    completedReps: null,
                 });
             }
         }
