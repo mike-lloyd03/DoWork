@@ -92,14 +92,14 @@ export class Workout {
         // }
     }
 
-    static async get(db: Database, id: number): Promise<Workout> {
+    static async get(db: Database, id: number): Promise<Workout | null> {
         const stmt = "SELECT * FROM workouts WHERE id = ? LIMIT 1";
         const resp: WorkoutDB[] = await db.select(stmt, [id]);
 
         if (resp.length > 0) {
             return Workout.fromDB(resp[0]);
         }
-        throw null;
+        return null;
     }
 
     static async getAll(db: Database): Promise<Workout[]> {
@@ -182,7 +182,7 @@ export class Workout {
     static async getLast(
         db: Database,
         type: WorkoutType | undefined = undefined,
-    ) {
+    ): Promise<Workout | null> {
         if (type) {
             const stmt =
                 "SELECT * FROM workouts WHERE type = ? ORDER BY startTime DESC LIMIT 1";
@@ -202,7 +202,7 @@ export class Workout {
                 return Workout.fromDB(resp[0]);
             }
         }
-        throw null;
+        return null;
     }
 
     static async getActive(db: Database) {
@@ -217,13 +217,19 @@ export class Workout {
         return null;
     }
 
-    static async createNext(db: Database) {
+    static async createNext(db: Database): Promise<Workout | null> {
         const lastWorkout = await this.getLast(db);
+        if (!lastWorkout) {
+            return null;
+        }
         const nextWorkoutType = lastWorkout.data.type == "A" ? "B" : "A";
         return this.generateWorkout(db, nextWorkoutType);
     }
 
-    static async generateWorkout(db: Database, type: WorkoutType) {
+    static async generateWorkout(
+        db: Database,
+        type: WorkoutType,
+    ): Promise<Workout> {
         const exercises: Exercise[] = [];
 
         if (type == "B") {

@@ -20,7 +20,7 @@ export class DB {
             this.db = await Database.load("sqlite:data.db");
 
             await Workout.initTable(this.db);
-            await insertTestData(this.db);
+            // await insertTestData(this.db);
         } catch (err) {
             console.error("Error initializing DB:", err);
         }

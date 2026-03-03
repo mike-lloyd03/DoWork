@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { Exercise } from "$lib/database/Workout";
+    import { Workout, type Exercise } from "$lib/database/Workout";
     import { liftDisplayName } from "$lib/utils";
 
     interface Props {
@@ -9,6 +9,8 @@
 
     let { show = $bindable(), exercise = $bindable() }: Props = $props();
 
+    let recalcWarmups = $state(true);
+
     // svelte-ignore state_referenced_locally
     let tempWeight = $state(exercise.workingWeight);
 
@@ -17,6 +19,9 @@
     }
     function saveWeight() {
         exercise.workingWeight = tempWeight;
+        if (recalcWarmups) {
+            exercise.warmupSets = Workout.generateWarmupSets(exercise.lift, tempWeight);
+        }
         closeModal();
     }
 </script>
@@ -39,6 +44,11 @@
                 <button class="btn join-item text-lg" onclick={() => (tempWeight += 5)}>+5</button>
             </div>
         </div>
+
+        <label class="label mt-4">
+            <input type="checkbox" class="checkbox" bind:checked={recalcWarmups} />
+            Recalculate warmup sets
+        </label>
 
         <div class="modal-action mt-6">
             <button class="btn btn-ghost" onclick={closeModal}>Cancel</button>

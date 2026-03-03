@@ -37,7 +37,7 @@
             target = exercise.warmupSets[index].targetReps;
 
             if (index > 0 && exercise.warmupSets.length > index - 1) {
-                if (exercise.workingSets[index - 1].completedReps === null) {
+                if (exercise.warmupSets[index - 1].completedReps === null) {
                     return;
                 }
             }
