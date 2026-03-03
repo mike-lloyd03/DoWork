@@ -28,5 +28,5 @@ export class DB {
 }
 
 const database = new DB();
-await database.init();
+database.init();
 export default database;

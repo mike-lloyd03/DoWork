@@ -1,3 +1,4 @@
+import { roundToEasyLoad } from "$lib/utils";
 import Database from "@tauri-apps/plugin-sql";
 import { DateTime } from "luxon";
 
@@ -295,15 +296,14 @@ export class Workout {
 
         switch (lift) {
             case "squat":
-                startingWeight = 45;
             case "benchPress":
-                startingWeight = workingWeight * 0.5;
             case "barbellRow":
-                startingWeight = workingWeight * 0.5;
             case "ohp":
-                startingWeight = workingWeight * 0.5;
+                startingWeight = 45;
+                break;
             case "deadlift":
                 startingWeight = 135;
+                break;
         }
 
         sets.push({
@@ -314,22 +314,24 @@ export class Workout {
 
         if (lift == "deadlift") {
             const increment = 0.25;
-            for (let i = 0; i < 4; i++) {
+            for (let i = 1; i < 4; i++) {
+                const targetWeight =
+                    startingWeight +
+                    (workingWeight - startingWeight) * increment * i;
                 sets.push({
-                    weight:
-                        startingWeight +
-                        (workingWeight - startingWeight) * increment * i,
+                    weight: roundToEasyLoad(targetWeight, 10),
                     targetReps: 5,
                     completedReps: null,
                 });
             }
         } else {
-            const increment = 0.25;
+            const increment = 0.3;
             for (let i = 0; i < 4; i++) {
+                const targetWeight =
+                    startingWeight +
+                    (workingWeight - startingWeight) * increment * i;
                 sets.push({
-                    weight:
-                        startingWeight +
-                        (workingWeight - startingWeight) * increment * i,
+                    weight: roundToEasyLoad(targetWeight, 10),
                     targetReps: 5,
                     completedReps: null,
                 });

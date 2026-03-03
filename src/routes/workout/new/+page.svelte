@@ -18,14 +18,14 @@
         workout.endTime = DateTime.now();
         let newWorkout = new Workout(workout);
         let db = await database.conn();
-        newWorkout.update(db);
+        await newWorkout.update(db);
         history.back();
     }
 
     async function updateWorkout() {
         let newWorkout = new Workout(workout);
         let db = await database.conn();
-        newWorkout.update(db);
+        await newWorkout.update(db);
     }
 </script>
 
