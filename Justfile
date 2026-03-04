@@ -31,7 +31,7 @@ logcat:
     adb logcat | grep -Ei --color=always "duck_decoy_mobile_lib|RustStdoutStderr|Tauri/Console|webview:.*tauri"
 
 upload:
-    xcrun altool --upload-app --type ios --file 'src-tauri/gen/apple/build/arm64/Milo Motion.ipa' --apiKey $API_KEY --apiIssuer $API_ISSUER
+    xcrun altool --upload-app --type ios --file 'src-tauri/gen/apple/build/arm64/*.ipa' --apiKey $API_KEY --apiIssuer $API_ISSUER
 
 [macos]
 rev:

@@ -14,18 +14,24 @@
     // svelte-ignore state_referenced_locally
     let workout: WorkoutModel = $state(data.workout!.data);
 
+    $effect(() => {
+        // triggers the effect on every update to workout
+        const _ = $state.snapshot(workout);
+
+        const timer = setTimeout(() => {
+            let newWorkout = new Workout(workout);
+            database.conn().then((db) => newWorkout.update(db));
+        }, 500);
+
+        return () => clearTimeout(timer);
+    });
+
     async function finishWorkout() {
         workout.endTime = DateTime.now();
         let newWorkout = new Workout(workout);
         let db = await database.conn();
         await newWorkout.update(db);
         history.back();
-    }
-
-    async function updateWorkout() {
-        let newWorkout = new Workout(workout);
-        let db = await database.conn();
-        await newWorkout.update(db);
     }
 </script>
 
@@ -35,7 +41,7 @@
     <div class="space-y-4 p-4">
         {#if workout}
             {#each workout.exercises as _, i (i)}
-                <ExerciseRow bind:exercise={workout.exercises[i]} editMode {updateWorkout} />
+                <ExerciseRow bind:exercise={workout.exercises[i]} editMode />
             {/each}
         {/if}
 

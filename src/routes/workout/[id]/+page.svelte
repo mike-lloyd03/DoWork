@@ -3,7 +3,6 @@
     import ExerciseRow from "$lib/components/workout/ExerciseRow.svelte";
     import type { PageProps } from "./$types";
     import { Workout, type WorkoutModel } from "$lib/database/Workout";
-    import { DateTime } from "luxon";
     import database from "$lib/database/DB.svelte";
     import Footer from "$lib/components/workout/Footer.svelte";
     import AddNote from "$lib/components/workout/AddNote.svelte";
@@ -44,7 +43,9 @@
         let db = await database.conn();
         if (workout.id) {
             let del = await Workout.get(db, workout.id);
-            del.delete(db);
+            if (del) {
+                del.delete(db);
+            }
         }
         goto("/history");
     }

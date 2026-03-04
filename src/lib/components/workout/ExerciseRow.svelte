@@ -8,10 +8,9 @@
     interface Props {
         exercise: Exercise;
         editMode?: boolean;
-        updateWorkout?: () => void;
     }
 
-    let { exercise = $bindable(), editMode, updateWorkout }: Props = $props();
+    let { exercise = $bindable(), editMode }: Props = $props();
 
     let showEditWeightModal = $state(false);
 
@@ -59,10 +58,6 @@
             exercise.workingSets[index].completedReps = completedReps;
         } else {
             exercise.warmupSets[index].completedReps = completedReps;
-        }
-
-        if (updateWorkout) {
-            updateWorkout();
         }
     }
 
@@ -135,4 +130,4 @@
     </div>
 </div>
 
-<EditWeightModal bind:show={showEditWeightModal} {exercise} />
+<EditWeightModal bind:show={showEditWeightModal} bind:exercise />

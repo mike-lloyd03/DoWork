@@ -17,11 +17,15 @@
     function closeModal() {
         show = false;
     }
+
     function saveWeight() {
         exercise.workingWeight = tempWeight;
+        exercise.workingSets = Workout.generateWorkingSets(exercise.lift, tempWeight);
+
         if (recalcWarmups) {
             exercise.warmupSets = Workout.generateWarmupSets(exercise.lift, tempWeight);
         }
+
         closeModal();
     }
 </script>
