@@ -66,7 +66,7 @@
     }
 </script>
 
-<div class="bg-base-200 min-h-screen pb-32">
+<div class="bg-base-200">
     <Header workoutType={workout.type} />
 
     <div class="space-y-4 p-4">

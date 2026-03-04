@@ -2,3 +2,7 @@
 @plugin "daisyui" {
   themes: wireframe --default, business --prefersdark;
 }
+
+@utility btn {
+  @apply rounded-full;
+}

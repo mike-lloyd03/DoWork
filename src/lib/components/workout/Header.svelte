@@ -12,7 +12,7 @@
     const menuItems = [{ text: "Switch Workout Type", action: () => {} }];
 </script>
 
-<div class="navbar bg-base-100 sticky top-0 z-50 shadow-sm">
+<div class="navbar bg-base-100 sticky top-[env(safe-area-inset-top)] z-50 shadow-sm">
     <div class="flex-none">
         <button class="btn btn-ghost btn-circle" onclick={() => history.back()}>
             <ArrowLeft size={24} />

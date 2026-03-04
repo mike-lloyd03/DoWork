@@ -35,17 +35,23 @@
         <h3 class="text-lg font-bold">{liftDisplayName(exercise.lift)}</h3>
         <div class="mb-4">Working Weight</div>
 
-        <div class="form-control w-full">
-            <div class="join w-full">
-                <button class="btn join-item text-lg" onclick={() => (tempWeight -= 5)}>-5</button>
+        <div class="form-control">
+            <div class="flex justify-around gap-6">
+                <button
+                    class="btn btn-secondary join-item text-lg"
+                    onclick={() => (tempWeight -= 5)}>-5</button
+                >
 
                 <input
                     type="number"
                     bind:value={tempWeight}
-                    class="input input-bordered join-item w-full text-center font-mono text-2xl font-black"
+                    class="input input-bordered join-item rounded-full text-center font-mono text-2xl font-black"
                 />
 
-                <button class="btn join-item text-lg" onclick={() => (tempWeight += 5)}>+5</button>
+                <button
+                    class="btn btn-secondary join-item text-lg"
+                    onclick={() => (tempWeight += 5)}>+5</button
+                >
             </div>
         </div>
 
@@ -55,7 +61,7 @@
         </label>
 
         <div class="modal-action mt-6">
-            <button class="btn btn-ghost" onclick={closeModal}>Cancel</button>
+            <button class="btn" onclick={closeModal}>Cancel</button>
             <button class="btn btn-primary px-8" onclick={saveWeight}>Save</button>
         </div>
     </div>

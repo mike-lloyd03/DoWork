@@ -67,7 +67,7 @@
                 <div class="card-actions mt-2">
                     <a
                         href={resolve("/workout/new")}
-                        class="btn btn-primary btn-lg btn-block group gap-3 text-lg shadow-lg"
+                        class="btn btn-primary btn-lg btn-block group gap-3 text-lg"
                     >
                         <Play
                             size={24}

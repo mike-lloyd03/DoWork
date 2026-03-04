@@ -24,7 +24,7 @@
     }
 </script>
 
-<button class="btn {btnColor()} btn-lg grow gap-3 text-xl shadow-lg" {onclick}>
+<button class="btn {btnColor()} btn-lg gap-3 text-xl" {onclick}>
     {#if icon == "circleCheck"}
         <CircleCheck size={24} strokeWidth={2.5} />
     {:else if icon == "squarePen"}
