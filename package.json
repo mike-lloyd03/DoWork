@@ -1,14 +1,14 @@
 {
     "name": "dowork",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "",
     "type": "module",
     "scripts": {
         "dev": "vite dev",
         "build": "vite build",
         "preview": "vite preview",
-        "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-        "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+        "check": "svelte-kit sync \u0026\u0026 svelte-check --tsconfig ./tsconfig.json",
+        "check:watch": "svelte-kit sync \u0026\u0026 svelte-check --tsconfig ./tsconfig.json --watch",
         "tauri": "tauri"
     },
     "license": "MIT",
