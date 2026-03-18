@@ -1,24 +1,4 @@
-import { type WorkoutModel, type Lift } from "./database/Workout.svelte";
-
-export function calculateNextWorkout(lastWorkout: WorkoutModel) {
-    const type = lastWorkout.type == "A" ? "B" : "A";
-    const exercises = [];
-    switch (type) {
-        case "A":
-            exercises.push({ lift: "squat", weight: 200 });
-        case "B":
-    }
-    return {
-        name: `Workout ${type}`,
-        lastPerformed: lastWorkout.startTime,
-        durationEstimate: "45 min",
-        exercises: [
-            { name: "Squat", sets: "5x5", weight: 225 },
-            { name: "Bench Press", sets: "5x5", weight: 135 },
-            { name: "Barbell Row", sets: "5x5", weight: 135 },
-        ],
-    };
-}
+import { type Lift } from "./database/Workout.svelte";
 
 export function liftDisplayName(lift: Lift): string {
     switch (lift) {

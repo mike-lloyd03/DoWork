@@ -134,7 +134,7 @@ export class Workout {
     async delete() {
         const db = await database.conn();
         const stmt = "DELETE FROM workouts WHERE id = ?";
-        db.execute(stmt, [this.data.id]);
+        await db.execute(stmt, [this.data.id]);
     }
 
     checkSuccess() {
