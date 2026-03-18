@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { Workout, WorkoutType } from "$lib/database/Workout.svelte";
+    import type { Workout } from "$lib/database/Workout.svelte";
     import { ArrowLeft } from "@lucide/svelte";
     import HamburgerMenu from "$lib/components/HamburgerMenu.svelte";
     import { goto } from "$app/navigation";
@@ -15,8 +15,7 @@
         {
             text: "Discard Workout",
             action: () => {
-                workout.delete();
-                goto("/");
+                workout.delete().then(() => goto("/"));
             },
         },
     ];
