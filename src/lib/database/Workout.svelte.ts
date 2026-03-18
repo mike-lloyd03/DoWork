@@ -326,7 +326,10 @@ export class Workout {
                     startingWeight +
                     (workingWeight - startingWeight) * increment * i;
                 sets.push({
-                    weight: roundToEasyLoad(targetWeight, 10),
+                    weight: roundToEasyLoad(targetWeight, {
+                        smallestWeight: 10,
+                        tolerancePercent: 0.15,
+                    }),
                     targetReps: 5,
                     completedReps: null,
                 });
@@ -338,7 +341,10 @@ export class Workout {
                     startingWeight +
                     (workingWeight - startingWeight) * increment * i;
                 sets.push({
-                    weight: roundToEasyLoad(targetWeight, 10),
+                    weight: roundToEasyLoad(targetWeight, {
+                        smallestWeight: 10,
+                        tolerancePercent: 0.15,
+                    }),
                     targetReps: 5,
                     completedReps: null,
                 });

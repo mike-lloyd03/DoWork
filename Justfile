@@ -62,3 +62,10 @@ rev:
 
     dasel -i json --root "version = \"$NEW_VERSION\"" < src-tauri/tauri.conf.json > tmp
     mv tmp src-tauri/tauri.conf.json
+
+tag:
+    #!/bin/bash
+    set -e
+    VERSION=$(cat src-tauri/tauri.conf.json | jq  -r '.version')
+
+    git tag "v$VERSION"
