@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { Exercise, Set } from "$lib/database/Workout";
+    import type { Exercise, Set } from "$lib/database/Workout.svelte";
     import { liftDisplayName } from "$lib/utils";
     import { Dumbbell } from "@lucide/svelte";
     import EditWeightModal from "./EditWeightModal.svelte";

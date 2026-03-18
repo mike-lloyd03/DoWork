@@ -1,17 +1,21 @@
 import type { PageLoad } from "../[id]/$types";
-import database from "$lib/database/DB.svelte";
-import { Workout } from "$lib/database/Workout";
+import { Workout } from "$lib/database/Workout.svelte";
+import { goto } from "$app/navigation";
 
 export const load: PageLoad = async ({ params, depends }) => {
     depends(`data:workout/${params.id}`);
     try {
-        const db = await database.conn();
         const id = parseInt(params.id);
-        let workout = await Workout.get(db, id);
+        let workout = await Workout.get(id);
 
-        return {
-            workout: workout.data,
-        };
+        if (workout) {
+            return {
+                workout,
+            };
+        } else {
+            console.error(`Workout ${params.id} not found`);
+            goto("/history");
+        }
     } catch (e) {
         console.error(`Error fetching workout: ${e}`);
     }

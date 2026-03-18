@@ -2,7 +2,7 @@
     import { resolve } from "$app/paths";
     import { Play, Trophy, Scale, History } from "@lucide/svelte";
     import type { PageProps } from "./$types";
-    import type { WorkoutModel } from "$lib/database/Workout";
+    import { Workout, type WorkoutModel } from "$lib/database/Workout.svelte";
     import WorkoutExercise from "$lib/components/WorkoutExercise.svelte";
 
     let { data }: PageProps = $props();
@@ -10,7 +10,13 @@
     let nextWorkout: WorkoutModel | undefined = $derived(
         data.nextWorkout?.data ?? data.activeWorkout?.data,
     );
+    let lastWorkout: Workout | undefined = $state(undefined);
     let activeWorkout = $derived(data.activeWorkout != undefined);
+    $effect(() => {
+        if (nextWorkout) {
+            Workout.getLast(nextWorkout.type).then((w) => (lastWorkout = w ? w : undefined));
+        }
+    });
 
     let userStats = $state({
         bodyweight: 185,
@@ -45,9 +51,13 @@
                         <h2 class="card-title text-3xl font-bold">
                             Workout {nextWorkout.type}
                         </h2>
-                        <p class="text-base-content/60 mt-1 flex items-center gap-1 text-sm">
-                            <History size={14} /> Last: {123456}
-                        </p>
+                        {#if lastWorkout}
+                            <p class="text-base-content/60 mt-1 flex items-center gap-1 text-sm">
+                                <History size={14} /> Last: {lastWorkout.data.startTime?.toFormat(
+                                    "MM/dd/yyyy",
+                                )}
+                            </p>
+                        {/if}
                     </div>
                     <div class="badge badge-primary badge-lg font-bold">
                         {activeWorkout ? "In Progress" : "Next"}

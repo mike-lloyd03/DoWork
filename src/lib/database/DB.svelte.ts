@@ -1,7 +1,6 @@
 import Database from "@tauri-apps/plugin-sql";
 
-import { Workout } from "./Workout";
-import { insertTestData } from "./testData";
+import { Workout } from "./Workout.svelte";
 
 export class DB {
     db?: Database = $state(undefined);
@@ -19,7 +18,7 @@ export class DB {
         try {
             this.db = await Database.load("sqlite:data.db");
 
-            await Workout.initTable(this.db);
+            await Workout.initTable();
             // await insertTestData(this.db);
         } catch (err) {
             console.error("Error initializing DB:", err);

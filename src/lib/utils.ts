@@ -1,4 +1,4 @@
-import { type WorkoutModel, type Lift } from "./database/Workout";
+import { type WorkoutModel, type Lift } from "./database/Workout.svelte";
 
 export function calculateNextWorkout(lastWorkout: WorkoutModel) {
     const type = lastWorkout.type == "A" ? "B" : "A";

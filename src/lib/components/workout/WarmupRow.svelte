@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { Exercise } from "$lib/database/Workout";
+    import type { Exercise } from "$lib/database/Workout.svelte";
     import { liftDisplayName } from "$lib/utils";
     import { Flame } from "@lucide/svelte";
 
@@ -26,7 +26,7 @@
 
         if (current === 0) {
             exercise.warmupSets[index].completedReps = target;
-        } else if (current > 0) {
+        } else if (current && current > 0) {
             exercise.warmupSets[index].completedReps = current - 1;
         } else {
             exercise.warmupSets[index].completedReps = 0;
@@ -57,7 +57,7 @@
                     <div class="flex min-w-12 flex-col items-center gap-1.5">
                         <button
                             class="btn btn-circle btn-md border-none text-base font-bold transition-all duration-200 {getBubbleClass(
-                                set.completedReps,
+                                set.completedReps ?? 0,
                                 set.targetReps,
                             )}"
                             onclick={() => toggleSet(i)}

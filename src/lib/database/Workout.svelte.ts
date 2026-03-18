@@ -1,6 +1,6 @@
 import { roundToEasyLoad } from "$lib/utils";
-import Database from "@tauri-apps/plugin-sql";
 import { DateTime } from "luxon";
+import database from "./DB.svelte";
 
 export interface WorkoutDB {
     id?: number;
@@ -38,13 +38,15 @@ export type Lift = "squat" | "benchPress" | "barbellRow" | "ohp" | "deadlift";
 export type WorkoutType = "A" | "B";
 
 export class Workout {
-    data: WorkoutModel;
+    data: WorkoutModel = $state() as WorkoutModel;
 
     constructor(data: WorkoutModel) {
         this.data = data;
     }
 
-    static async initTable(db: Database) {
+    static async initTable() {
+        const db = await database.conn();
+
         console.log("Initializing workouts table");
         // await db.execute("DROP TABLE workouts");
 
@@ -65,9 +67,7 @@ export class Workout {
         const model: WorkoutModel = {
             id: data.id,
             startTime: DateTime.fromISO(data.startTime),
-            endTime: data.endTime
-                ? DateTime.fromISO(data.startTime)
-                : undefined,
+            endTime: data.endTime ? DateTime.fromISO(data.endTime) : undefined,
             type: data.type,
             notes: data.notes,
             exercises: JSON.parse(data.exerciseData),
@@ -75,11 +75,14 @@ export class Workout {
         return new Workout(model);
     }
 
-    async create(db: Database) {
+    async create() {
+        const db = await database.conn();
+
         this.checkSuccess();
         const stmt =
             "INSERT INTO workouts (startTime, endTime, type, exerciseData, notes) VALUES (?, ?, ?, ?, ?)";
-        await db.execute(stmt, [
+
+        const res = await db.execute(stmt, [
             this.data.startTime?.toISO() ?? undefined,
             this.data.endTime?.toISO() ?? undefined,
             this.data.type,
@@ -87,12 +90,12 @@ export class Workout {
             this.data.notes,
         ]);
 
-        // if (resp.changes && resp.changes.lastId) {
-        //     this.data.id = resp.changes.lastId;
-        // }
+        this.data.id = res.lastInsertId;
     }
 
-    static async get(db: Database, id: number): Promise<Workout | null> {
+    static async get(id: number): Promise<Workout | null> {
+        const db = await database.conn();
+
         const stmt = "SELECT * FROM workouts WHERE id = ? LIMIT 1";
         const resp: WorkoutDB[] = await db.select(stmt, [id]);
 
@@ -102,7 +105,9 @@ export class Workout {
         return null;
     }
 
-    static async getAll(db: Database): Promise<Workout[]> {
+    static async getAll(): Promise<Workout[]> {
+        const db = await database.conn();
+
         const stmt = "SELECT * FROM workouts ORDER BY startTime DESC";
         const resp: WorkoutDB[] = await db.select(stmt);
 
@@ -111,7 +116,8 @@ export class Workout {
         });
     }
 
-    async update(db: Database) {
+    async update() {
+        const db = await database.conn();
         this.checkSuccess();
         const stmt =
             "UPDATE workouts SET startTime = ?, endTime = ?, type = ?, exerciseData = ?, notes = ? WHERE id = ?";
@@ -125,7 +131,8 @@ export class Workout {
         ]);
     }
 
-    async delete(db: Database) {
+    async delete() {
+        const db = await database.conn();
         const stmt = "DELETE FROM workouts WHERE id = ?";
         db.execute(stmt, [this.data.id]);
     }
@@ -138,7 +145,9 @@ export class Workout {
         });
     }
 
-    static async getMaxLift(db: Database, liftName: Lift): Promise<number> {
+    static async getMaxLift(liftName: Lift): Promise<number> {
+        const db = await database.conn();
+
         const sql = `
     SELECT MAX(CAST(sets.value ->> 'weight' AS REAL)) as max_weight
     FROM workouts,
@@ -158,7 +167,9 @@ export class Workout {
         return 0;
     }
 
-    static async getMostRecentLift(db: Database, lift: Lift): Promise<number> {
+    static async getMostRecentLift(lift: Lift): Promise<number> {
+        const db = await database.conn();
+
         const sql = `
     SELECT CAST(exercise.value ->> 'workingWeight' AS REAL) as recent_weight
     FROM workouts,
@@ -180,9 +191,10 @@ export class Workout {
     }
 
     static async getLast(
-        db: Database,
         type: WorkoutType | undefined = undefined,
     ): Promise<Workout | null> {
+        const db = await database.conn();
+
         if (type) {
             const stmt =
                 "SELECT * FROM workouts WHERE type = ? ORDER BY startTime DESC LIMIT 1";
@@ -205,7 +217,9 @@ export class Workout {
         return null;
     }
 
-    static async getActive(db: Database) {
+    static async getActive() {
+        const db = await database.conn();
+
         const stmt =
             "SELECT * FROM workouts WHERE endTime is null ORDER BY startTime DESC LIMIT 1";
 
@@ -217,38 +231,29 @@ export class Workout {
         return null;
     }
 
-    static async createNext(db: Database): Promise<Workout | null> {
-        const lastWorkout = await this.getLast(db);
+    static async createNext(): Promise<Workout | null> {
+        const lastWorkout = await this.getLast();
         if (!lastWorkout) {
             return null;
         }
         const nextWorkoutType = lastWorkout.data.type == "A" ? "B" : "A";
-        return this.generateWorkout(db, nextWorkoutType);
+        return this.generateWorkout(nextWorkoutType);
     }
 
-    static async generateWorkout(
-        db: Database,
-        type: WorkoutType,
-    ): Promise<Workout> {
+    static async generateWorkout(type: WorkoutType): Promise<Workout> {
         const exercises: Exercise[] = [];
 
         if (type == "B") {
-            const squatSets = await this.generateExercise(db, "squat");
-            const ohpSets = await this.generateExercise(db, "ohp");
-            const deadliftSets = await this.generateExercise(db, "deadlift");
+            const squatSets = await this.generateExercise("squat");
+            const ohpSets = await this.generateExercise("ohp");
+            const deadliftSets = await this.generateExercise("deadlift");
             exercises.push(squatSets);
             exercises.push(ohpSets);
             exercises.push(deadliftSets);
         } else {
-            const squatSets = await this.generateExercise(db, "squat");
-            const benchPressSets = await this.generateExercise(
-                db,
-                "benchPress",
-            );
-            const barbellRowSets = await this.generateExercise(
-                db,
-                "barbellRow",
-            );
+            const squatSets = await this.generateExercise("squat");
+            const benchPressSets = await this.generateExercise("benchPress");
+            const barbellRowSets = await this.generateExercise("barbellRow");
             exercises.push(squatSets);
             exercises.push(benchPressSets);
             exercises.push(barbellRowSets);
@@ -260,8 +265,8 @@ export class Workout {
         });
     }
 
-    static async generateExercise(db: Database, lift: Lift): Promise<Exercise> {
-        let mostRecentWeight = await this.getMostRecentLift(db, lift);
+    static async generateExercise(lift: Lift): Promise<Exercise> {
+        let mostRecentWeight = await this.getMostRecentLift(lift);
         let workingWeight = mostRecentWeight + 5;
 
         const workingSets = this.generateWorkingSets(lift, workingWeight);
@@ -275,11 +280,7 @@ export class Workout {
         };
     }
 
-    static generateWorkingSets(
-        lift: Lift,
-
-        workingWeight: number,
-    ): Set[] {
+    static generateWorkingSets(lift: Lift, workingWeight: number): Set[] {
         let sets = [];
         let nSets = 5;
         if (lift == "deadlift") {

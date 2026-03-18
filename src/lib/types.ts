@@ -1,5 +1,5 @@
 import type { DateTime } from "luxon";
-import type { Lift } from "./database/Workout";
+import type { Lift } from "./database/Workout.svelte";
 
 export interface WorkoutPlan {
     type: "A" | "B";

@@ -1,4 +1,4 @@
-import { Workout } from "./Workout";
+import { Workout } from "./Workout.svelte";
 import { DateTime } from "luxon";
 import Database from "@tauri-apps/plugin-sql";
 
@@ -122,6 +122,6 @@ export async function insertTestData(db: Database) {
     });
 
     await db.execute("DELETE FROM workouts WHERE notes = 'TESTDATA'");
-    await testData1.create(db);
-    await testData2.create(db);
+    await testData1.create();
+    await testData2.create();
 }

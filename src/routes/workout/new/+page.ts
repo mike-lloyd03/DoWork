@@ -1,19 +1,18 @@
 import type { PageLoad } from "../new/$types";
 import database from "$lib/database/DB.svelte";
-import { Workout } from "$lib/database/Workout";
+import { Workout } from "$lib/database/Workout.svelte";
 import { DateTime } from "luxon";
 
 export const load: PageLoad = async () => {
-    const db = await database.conn();
     try {
-        let workout = await Workout.getActive(db);
+        let workout = await Workout.getActive();
         if (workout == null) {
-            workout = await Workout.createNext(db);
+            workout = await Workout.createNext();
             if (!workout) {
-                workout = await Workout.generateWorkout(db, "A");
+                workout = await Workout.generateWorkout("A");
             }
             workout.data.startTime = DateTime.now();
-            await workout.create(db);
+            await workout.create();
         }
 
         return {

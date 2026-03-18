@@ -1,10 +1,8 @@
 import type { PageLoad } from "./$types";
-import database from "$lib/database/DB.svelte";
-import { Workout } from "$lib/database/Workout";
+import { Workout } from "$lib/database/Workout.svelte";
 
 export const load: PageLoad = async () => {
-    const db = await database.conn();
-    const workouts = await Workout.getAll(db);
+    const workouts = await Workout.getAll();
     return {
         workouts,
     };

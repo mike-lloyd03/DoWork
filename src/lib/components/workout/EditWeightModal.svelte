@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Workout, type Exercise } from "$lib/database/Workout";
+    import { Workout, type Exercise } from "$lib/database/Workout.svelte";
     import { liftDisplayName } from "$lib/utils";
 
     interface Props {
