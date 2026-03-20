@@ -60,7 +60,7 @@
 </script>
 
 <div class="bg-base-200">
-    <Header {workout} />
+    <Header bind:workout />
 
     <div class="space-y-4 p-4">
         {#if workout}
