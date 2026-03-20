@@ -1,7 +1,7 @@
 import type { PageLoad } from "../new/$types";
-import database from "$lib/database/DB.svelte";
 import { Workout } from "$lib/database/Workout.svelte";
 import { DateTime } from "luxon";
+import { goto } from "$app/navigation";
 
 export const load: PageLoad = async () => {
     try {
@@ -15,10 +15,9 @@ export const load: PageLoad = async () => {
             await workout.create();
         }
 
-        return {
-            workout,
-        };
+        goto(`/workout/${workout.data.id}`);
     } catch (e) {
         console.error(`Error setting up new workout: ${e}`);
+        goto("/");
     }
 };

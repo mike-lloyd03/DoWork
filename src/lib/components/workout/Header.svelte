@@ -7,16 +7,19 @@
 
     interface Props {
         workout: Workout;
+        editMode?: boolean;
     }
 
-    let { workout = $bindable() }: Props = $props();
+    let { workout = $bindable(), editMode = $bindable() }: Props = $props();
+
     let hamburgerMenu = $state<HamburgerMenu>();
     let modalOpen = $state(false);
     let modalTitle = $state("");
     let modalMessage = $state("");
     let pendingAction = $state<(() => void) | null>(null);
+    let workoutIsComplete = $state(workout.data.endTime != undefined);
 
-    const menuItems = [
+    const inProgressMenuItems = [
         {
             text: "Switch Workout Type",
             action: () => {
@@ -47,6 +50,26 @@
         },
     ];
 
+    const historyMenuItems = [
+        {
+            text: "Edit Workout",
+            action: () => {
+                editMode = true;
+            },
+        },
+        {
+            text: "Delete Workout",
+            action: () => {
+                modalTitle = "Delete Workout?";
+                modalMessage = "This will permanently delete this workout. Are you sure?";
+                pendingAction = () => {
+                    workout.delete().then(() => goto("/"));
+                };
+                modalOpen = true;
+            },
+        },
+    ];
+
     function handleConfirm() {
         pendingAction?.();
         pendingAction = null;
@@ -68,7 +91,10 @@
         <h1 class="px-2 text-lg font-bold">Workout {workout.data.type}</h1>
     </div>
 
-    <HamburgerMenu bind:this={hamburgerMenu} items={menuItems} />
+    <HamburgerMenu
+        bind:this={hamburgerMenu}
+        items={workoutIsComplete ? historyMenuItems : inProgressMenuItems}
+    />
 </div>
 
 <Modal
