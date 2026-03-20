@@ -7,34 +7,26 @@
     import AddNote from "$lib/components/workout/AddNote.svelte";
     import Header from "$lib/components/workout/Header.svelte";
     import FooterButton from "$lib/components/workout/FooterButton.svelte";
-    import EditTimesModal from "$lib/components/workout/EditTimesModal.svelte";
+    import { goto } from "$app/navigation";
+    import { page } from "$app/state";
 
     let { data }: PageProps = $props();
 
-    // svelte-ignore state_referenced_locally
     let workout: Workout = $state(data.workout!);
-    let isComplete = $derived(workout.data.endTime != null);
-    let editMode = $derived(!isComplete);
+    let isComplete = $derived(workout.data.endTime !== null);
+    let editMode = $derived(isComplete ? page.url.searchParams.get("edit") === "true" : true);
 
-    let tempStartTime = $state(
-        workout.data.startTime
-            ? workout.data.startTime.toFormat("yyyy-MM-dd'T'HH:mm") || ""
-            : undefined,
-    );
-    let tempEndTime = $state(
-        workout.data.endTime
-            ? workout.data.endTime.toFormat("yyyy-MM-dd'T'HH:mm") || ""
-            : undefined,
-    );
+    let tempStartTime = $state("");
+    let tempEndTime = $state("");
 
     $effect(() => {
-        // triggers the effect on every update to workout
+        tempStartTime = workout.data.startTime?.toFormat("yyyy-MM-dd'T'HH:mm") ?? "";
+        tempEndTime = workout.data.endTime?.toFormat("yyyy-MM-dd'T'HH:mm") ?? "";
+    });
+
+    $effect(() => {
         const _ = $state.snapshot(workout.data);
-
-        const timer = setTimeout(() => {
-            workout.update();
-        }, 500);
-
+        const timer = setTimeout(() => workout.update(), 500);
         return () => clearTimeout(timer);
     });
 
@@ -48,12 +40,12 @@
         workout.data.startTime = tempStartTime ? DateTime.fromISO(tempStartTime) : undefined;
         workout.data.endTime = tempEndTime ? DateTime.fromISO(tempEndTime) : undefined;
         await workout.update();
-        editMode = false;
+        goto(page.url.pathname, { replaceState: true });
     }
 </script>
 
 <div class="bg-base-200 min-h-screen pb-32">
-    <Header bind:workout bind:editMode />
+    <Header {workout} />
 
     <div class="space-y-4 p-4">
         {#if workout}
@@ -109,9 +101,3 @@
         </Footer>
     {/if}
 </div>
-
-<EditTimesModal
-    show={false}
-    bind:startTime={workout.data.startTime}
-    bind:endTime={workout.data.endTime}
-/>

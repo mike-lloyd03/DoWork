@@ -1,8 +1,10 @@
 <script lang="ts">
-    import { resolve } from "$app/paths";
-    import { CircleCheck, Clock, Trophy, Loader } from "@lucide/svelte";
+    import { CircleCheck, Clock, Plus, Trophy } from "@lucide/svelte";
     import type { PageProps } from "./$types";
     import { DateTime } from "luxon";
+    import { Workout } from "$lib/database/Workout.svelte";
+    import { goto } from "$app/navigation";
+    import { resolve } from "$app/paths";
 
     let { data }: PageProps = $props();
 
@@ -53,6 +55,14 @@
     const getDay = (d: DateTime) => d.day;
     const getMonth = (d: DateTime) => d.toFormat("MMM");
     const getDayName = (d: DateTime) => d.toFormat("ccc");
+
+    async function addWorkout() {
+        let workout = await Workout.generateWorkout("A");
+        workout.data.startTime = DateTime.now();
+        workout.data.endTime = DateTime.now();
+        await workout.create();
+        goto(`/workout/${workout.data.id}?edit=true`);
+    }
 </script>
 
 <div class="space-y-4 p-4 pb-24">
@@ -141,4 +151,11 @@
             </a>
         {/each}
     {/if}
+
+    <button
+        class="btn btn-primary btn-circle btn-lg fixed right-4 bottom-28 h-16 w-16 shadow-lg"
+        onclick={addWorkout}
+    >
+        <Plus size={36} />
+    </button>
 </div>

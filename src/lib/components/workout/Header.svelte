@@ -4,20 +4,20 @@
     import HamburgerMenu from "$lib/components/HamburgerMenu.svelte";
     import Modal from "$lib/components/Modal.svelte";
     import { goto } from "$app/navigation";
+    import { page } from "$app/state";
 
     interface Props {
         workout: Workout;
-        editMode?: boolean;
     }
 
-    let { workout = $bindable(), editMode = $bindable() }: Props = $props();
+    let { workout = $bindable() }: Props = $props();
 
     let hamburgerMenu = $state<HamburgerMenu>();
     let modalOpen = $state(false);
     let modalTitle = $state("");
     let modalMessage = $state("");
     let pendingAction = $state<(() => void) | null>(null);
-    let workoutIsComplete = $state(workout.data.endTime != undefined);
+    let workoutIsComplete = $derived(workout.data.endTime !== undefined);
 
     const inProgressMenuItems = [
         {
@@ -54,7 +54,7 @@
         {
             text: "Edit Workout",
             action: () => {
-                editMode = true;
+                goto(`${page.url.pathname}?edit=true`);
             },
         },
         {
