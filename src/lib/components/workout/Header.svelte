@@ -21,8 +21,16 @@
             text: "Switch Workout Type",
             action: () => {
                 modalTitle = "Switch Workout Type?";
-                modalMessage = `Change to Workout ${workout.data.type === "A" ? "B" : "A"}? Your current progress will be reset.`;
-                pendingAction = switchWorkoutType;
+                modalMessage = `Change to Workout ${workout.data.type === "A" ? "B" : "A"}? Your current progress will be lost.`;
+                pendingAction = () => {
+                    const nextType = workout.data.type === "A" ? "B" : "A";
+                    Workout.generateWorkout(nextType).then((w) => {
+                        w.data.id = workout.data.id;
+                        w.data.startTime = workout.data.startTime;
+                        w.data.notes = workout.data.notes;
+                        workout.data = w.data;
+                    });
+                };
                 modalOpen = true;
             },
         },
@@ -31,25 +39,13 @@
             action: () => {
                 modalTitle = "Discard Workout?";
                 modalMessage = "This will permanently delete this workout. Are you sure?";
-                pendingAction = discardWorkout;
+                pendingAction = () => {
+                    workout.delete().then(() => goto("/"));
+                };
                 modalOpen = true;
             },
         },
     ];
-
-    function switchWorkoutType() {
-        const nextType = workout.data.type === "A" ? "B" : "A";
-        Workout.generateWorkout(nextType).then((w) => {
-            w.data.id = workout.data.id;
-            w.data.startTime = workout.data.startTime;
-            w.data.notes = workout.data.notes;
-            workout.data = w.data;
-        });
-    }
-
-    function discardWorkout() {
-        workout.delete().then(() => goto("/"));
-    }
 
     function handleConfirm() {
         pendingAction?.();
