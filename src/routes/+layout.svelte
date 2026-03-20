@@ -16,7 +16,7 @@
 <div class="bg-base-200 fixed inset-x-0 top-0 z-50 h-[env(safe-area-inset-top)]"></div>
 
 <main class="bg-base-200 text-base-content min-h-screen pt-[env(safe-area-inset-top)] pb-20">
-    {@render children()}
+    {@render children?.()}
 </main>
 
 {#if showDock}

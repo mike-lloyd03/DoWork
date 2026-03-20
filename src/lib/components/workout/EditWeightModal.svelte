@@ -11,7 +11,6 @@
 
     let recalcWarmups = $state(true);
 
-    // svelte-ignore state_referenced_locally
     let tempWeight = $state(exercise.workingWeight);
 
     function closeModal() {
