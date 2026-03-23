@@ -3,6 +3,7 @@
     import { page } from "$app/state";
     import { Dumbbell, CalendarDays, Settings } from "@lucide/svelte";
     import { resolve } from "$app/paths";
+    import Toast from "$lib/components/Toast.svelte";
 
     let { children } = $props();
 
@@ -39,3 +40,5 @@
 {/if}
 
 <div class="bg-base-100 fixed inset-x-0 bottom-0 z-50 h-[env(safe-area-inset-bottom)]"></div>
+
+<Toast />

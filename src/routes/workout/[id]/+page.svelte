@@ -8,6 +8,7 @@
     import Header from "$lib/components/workout/Header.svelte";
     import FooterButton from "$lib/components/workout/FooterButton.svelte";
     import WorkoutSummary from "$lib/components/workout/WorkoutSummary.svelte";
+    import { showToast } from "$lib/appState.svelte";
     import { page } from "$app/state";
 
     let { data }: PageProps = $props();
@@ -30,6 +31,25 @@
         return () => clearTimeout(timer);
     });
 
+    function validate(): boolean {
+        const start = tempStartTime ? DateTime.fromISO(tempStartTime) : null;
+        const end = tempEndTime ? DateTime.fromISO(tempEndTime) : null;
+
+        if (!start?.isValid) {
+            showToast("Invalid start time", "error");
+            return false;
+        }
+        if (!end?.isValid) {
+            showToast("Invalid end time", "error");
+            return false;
+        }
+        if (end <= start) {
+            showToast("End time must be after start time", "error");
+            return false;
+        }
+        return true;
+    }
+
     async function finishWorkout() {
         workout.data.endTime = DateTime.now();
         await workout.update();
@@ -37,6 +57,8 @@
     }
 
     async function saveChanges() {
+        if (!validate()) return;
+
         workout.data.startTime = tempStartTime ? DateTime.fromISO(tempStartTime) : undefined;
         workout.data.endTime = tempEndTime ? DateTime.fromISO(tempEndTime) : undefined;
         await workout.update();

@@ -2,6 +2,7 @@
     import { Workout, type WorkoutType } from "$lib/database/Workout.svelte";
     import { DateTime } from "luxon";
     import { goto } from "$app/navigation";
+    import { showToast } from "$lib/appState.svelte";
 
     interface Props {
         open: boolean;
@@ -15,7 +16,28 @@
     let endTime = $state(DateTime.now().toFormat("HH:mm"));
     let loading = $state(false);
 
+    function validate(): boolean {
+        const start = DateTime.fromISO(`${date}T${startTime}`);
+        const end = DateTime.fromISO(`${date}T${endTime}`);
+
+        if (!start.isValid) {
+            showToast("Invalid start time", "error");
+            return false;
+        }
+        if (!end.isValid) {
+            showToast("Invalid end time", "error");
+            return false;
+        }
+        if (end <= start) {
+            showToast("End time must be after start time", "error");
+            return false;
+        }
+        return true;
+    }
+
     async function handleSubmit() {
+        if (!validate()) return;
+
         loading = true;
         try {
             const startDateTime = DateTime.fromISO(`${date}T${startTime}`);
@@ -26,6 +48,7 @@
             workout.data.endTime = endDateTime;
             await workout.create();
 
+            open = false;
             goto(`/workout/${workout.data.id}`, { state: { editMode: true } });
         } finally {
             loading = false;
