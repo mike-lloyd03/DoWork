@@ -7,6 +7,7 @@
     import AddNote from "$lib/components/workout/AddNote.svelte";
     import Header from "$lib/components/workout/Header.svelte";
     import FooterButton from "$lib/components/workout/FooterButton.svelte";
+    import WorkoutSummary from "$lib/components/workout/WorkoutSummary.svelte";
     import { page } from "$app/state";
 
     let { data }: PageProps = $props();
@@ -49,33 +50,13 @@
     <div class="space-y-4 p-4">
         {#if workout}
             {#if isComplete}
-                <div class="card">
-                    <div>
-                        <span class="font-medium">Start:</span>
-                        {#if editMode}
-                            <input type="datetime-local" class="input" bind:value={tempStartTime} />
-                        {:else}
-                            <span
-                                >{workout.data.startTime?.toLocaleString(
-                                    DateTime.DATETIME_SHORT,
-                                )}</span
-                            >
-                        {/if}
-                    </div>
-
-                    <div>
-                        <span class="font-medium">End:</span>
-                        {#if editMode}
-                            <input type="datetime-local" class="input" bind:value={tempEndTime} />
-                        {:else}
-                            <span
-                                >{workout.data.endTime?.toLocaleString(
-                                    DateTime.DATETIME_SHORT,
-                                )}</span
-                            >
-                        {/if}
-                    </div>
-                </div>
+                <WorkoutSummary
+                    startTime={workout.data.startTime}
+                    endTime={workout.data.endTime}
+                    {editMode}
+                    bind:tempStartTime
+                    bind:tempEndTime
+                />
             {/if}
             {#each workout.data.exercises as _, i (i)}
                 <ExerciseRow bind:exercise={workout.data.exercises[i]} {editMode} />
@@ -84,8 +65,15 @@
 
         {#if editMode}
             <AddNote />
-        {:else}
-            <div>{workout.data.notes}</div>
+        {:else if workout.data.notes}
+            <div class="card bg-base-100 shadow-sm">
+                <div class="card-body">
+                    <div class="mb-1 text-xs font-medium tracking-wide uppercase opacity-60">
+                        Notes
+                    </div>
+                    <div>{workout.data.notes}</div>
+                </div>
+            </div>
         {/if}
     </div>
 

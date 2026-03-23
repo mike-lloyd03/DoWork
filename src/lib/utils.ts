@@ -1,4 +1,20 @@
 import { type Lift } from "./database/Workout.svelte";
+import { type DateTime } from "luxon";
+
+export function formatDuration(
+    start: DateTime | undefined,
+    end: DateTime | undefined,
+): string {
+    if (!start || !end) return "";
+    const diff = end.diff(start);
+    const mins = Math.round(diff.as("minutes"));
+    if (mins >= 60) {
+        const hours = Math.floor(mins / 60);
+        const remainingMins = mins % 60;
+        return `${hours}h ${remainingMins}m`;
+    }
+    return `${mins}m`;
+}
 
 export function liftDisplayName(lift: Lift): string {
     switch (lift) {

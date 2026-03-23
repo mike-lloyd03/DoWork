@@ -3,6 +3,7 @@
     import type { PageProps } from "./$types";
     import { DateTime } from "luxon";
     import { resolve } from "$app/paths";
+    import { formatDuration } from "$lib/utils";
     import AddWorkoutModal from "$lib/components/AddWorkoutModal.svelte";
 
     let { data }: PageProps = $props();
@@ -23,18 +24,11 @@
 
     let history: HistoryItem[] = $derived(
         data.workouts.map((w) => {
-            let duration = "";
-            if (w.data.startTime && w.data.endTime) {
-                const d = w.data.endTime.diff(w.data.startTime);
-                const mins = Math.round(d.minutes);
-                duration = `${mins}m`;
-            }
-
             return {
                 id: w.data.id ?? 0,
                 date: w.data.startTime,
                 name: `Workout ${w.data.type}`,
-                duration,
+                duration: formatDuration(w.data.startTime, w.data.endTime),
                 exercises: w.data.exercises.map((e) => ({
                     code: abbreviations[e.lift],
                     weight: e.workingWeight,
