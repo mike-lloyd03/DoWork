@@ -2,11 +2,12 @@
     import { CircleCheck, Clock, Plus, Trophy } from "@lucide/svelte";
     import type { PageProps } from "./$types";
     import { DateTime } from "luxon";
-    import { Workout } from "$lib/database/Workout.svelte";
-    import { goto } from "$app/navigation";
     import { resolve } from "$app/paths";
+    import AddWorkoutModal from "$lib/components/AddWorkoutModal.svelte";
 
     let { data }: PageProps = $props();
+
+    let showAddWorkoutModal = $state(false);
 
     interface HistoryItem {
         id: number;
@@ -51,18 +52,9 @@
         deadlift: "DL",
     };
 
-    // Helpers for date formatting
     const getDay = (d: DateTime) => d.day;
     const getMonth = (d: DateTime) => d.toFormat("MMM");
     const getDayName = (d: DateTime) => d.toFormat("ccc");
-
-    async function addWorkout() {
-        let workout = await Workout.generateWorkout("A");
-        workout.data.startTime = DateTime.now();
-        workout.data.endTime = DateTime.now();
-        await workout.create();
-        goto(`/workout/${workout.data.id}?edit=true`);
-    }
 </script>
 
 <div class="space-y-4 p-4 pb-24">
@@ -154,8 +146,10 @@
 
     <button
         class="btn btn-primary btn-circle btn-lg fixed right-4 bottom-28 h-16 w-16 shadow-lg"
-        onclick={addWorkout}
+        onclick={() => (showAddWorkoutModal = true)}
     >
         <Plus size={36} />
     </button>
+
+    <AddWorkoutModal open={showAddWorkoutModal} />
 </div>

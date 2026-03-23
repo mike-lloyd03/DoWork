@@ -7,12 +7,13 @@
     import AddNote from "$lib/components/workout/AddNote.svelte";
     import Header from "$lib/components/workout/Header.svelte";
     import FooterButton from "$lib/components/workout/FooterButton.svelte";
+    import { page } from "$app/state";
 
     let { data }: PageProps = $props();
 
     let workout: Workout = $state(data.workout!);
     let isComplete = $derived(workout.data.endTime !== undefined);
-    let editMode = $state(!isComplete);
+    let editMode = $state(page.state?.editMode ?? !isComplete);
 
     let tempStartTime = $state("");
     let tempEndTime = $state("");
