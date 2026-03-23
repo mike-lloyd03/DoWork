@@ -6,7 +6,7 @@ import { goto } from "$app/navigation";
 export const load: PageLoad = async () => {
     try {
         let workout = await Workout.getActive();
-        if (workout == null) {
+        if (!workout) {
             workout = await Workout.createNext();
             if (!workout) {
                 workout = await Workout.generateWorkout("A");

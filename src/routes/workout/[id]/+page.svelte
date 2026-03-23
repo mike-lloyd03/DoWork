@@ -7,14 +7,12 @@
     import AddNote from "$lib/components/workout/AddNote.svelte";
     import Header from "$lib/components/workout/Header.svelte";
     import FooterButton from "$lib/components/workout/FooterButton.svelte";
-    import { goto } from "$app/navigation";
-    import { page } from "$app/state";
 
     let { data }: PageProps = $props();
 
     let workout: Workout = $state(data.workout!);
-    let isComplete = $derived(workout.data.endTime !== null);
-    let editMode = $derived(isComplete ? page.url.searchParams.get("edit") === "true" : true);
+    let isComplete = $derived(workout.data.endTime !== undefined);
+    let editMode = $state(!isComplete);
 
     let tempStartTime = $state("");
     let tempEndTime = $state("");
@@ -40,12 +38,12 @@
         workout.data.startTime = tempStartTime ? DateTime.fromISO(tempStartTime) : undefined;
         workout.data.endTime = tempEndTime ? DateTime.fromISO(tempEndTime) : undefined;
         await workout.update();
-        goto(page.url.pathname, { replaceState: true });
+        editMode = false;
     }
 </script>
 
 <div class="bg-base-200 min-h-screen pb-32">
-    <Header {workout} />
+    <Header bind:workout bind:editMode />
 
     <div class="space-y-4 p-4">
         {#if workout}

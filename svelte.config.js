@@ -13,11 +13,23 @@ const config = {
             fallback: "index.html",
         }),
     },
-    // compilerOptions: {
-    //     experimental: {
-    //         async: true
-    //     }
-    // }
+
+    compilerOptions: {
+        warningFilter: (warning) => {
+            const ignoreList = [
+                'state_referenced_locally'
+            ]
+            if (ignoreList.includes(warning.code)) {
+                return false
+            };
+
+            if (warning.code.startsWith("a11y")) {
+                return false
+            };
+
+            return true
+        }
+    },
 };
 
 export default config;

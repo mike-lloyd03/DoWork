@@ -4,13 +4,13 @@
     import HamburgerMenu from "$lib/components/HamburgerMenu.svelte";
     import Modal from "$lib/components/Modal.svelte";
     import { goto } from "$app/navigation";
-    import { page } from "$app/state";
 
     interface Props {
         workout: Workout;
+        editMode?: boolean;
     }
 
-    let { workout = $bindable() }: Props = $props();
+    let { workout = $bindable(), editMode = $bindable() }: Props = $props();
 
     let hamburgerMenu = $state<HamburgerMenu>();
     let modalOpen = $state(false);
@@ -54,7 +54,7 @@
         {
             text: "Edit Workout",
             action: () => {
-                goto(`${page.url.pathname}?edit=true`);
+                editMode = true;
             },
         },
         {
