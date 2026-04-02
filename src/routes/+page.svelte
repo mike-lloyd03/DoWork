@@ -12,9 +12,10 @@
     );
     let lastWorkout: Workout | undefined = $state(undefined);
     let activeWorkout = $derived(data.activeWorkout != undefined);
+
     $effect(() => {
         if (nextWorkout) {
-            Workout.getLast(nextWorkout.type).then((w) => (lastWorkout = w ? w : undefined));
+            Workout.getLast(nextWorkout.type).then((w) => (lastWorkout = w ?? undefined));
         }
     });
 

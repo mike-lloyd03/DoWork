@@ -5,13 +5,13 @@ export const load: PageLoad = async () => {
     try {
         let activeWorkout = await Workout.getActive();
 
-        if (activeWorkout == null) {
-            const nextWorkout = await Workout.createNext();
+        if (activeWorkout === null) {
+            let nextWorkout = await Workout.createNext();
 
-            if (nextWorkout == null) {
-                const nextWorkout = await Workout.generateWorkout("A");
-                return { nextWorkout };
+            if (nextWorkout === null) {
+                nextWorkout = await Workout.generateWorkout("A");
             }
+
             return { nextWorkout };
         } else {
             return {
