@@ -92,6 +92,7 @@
     </div>
 
     <HamburgerMenu
+        id="workoutMenu"
         bind:this={hamburgerMenu}
         items={workoutIsComplete ? historyMenuItems : inProgressMenuItems}
     />

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import ExerciseRow from "$lib/components/workout/ExerciseRow.svelte";
+    import ExerciseCard from "$lib/components/workout/ExerciseCard.svelte";
     import type { PageProps } from "./$types";
     import { Workout } from "$lib/database/Workout.svelte";
     import { DateTime } from "luxon";
@@ -80,8 +80,9 @@
                     bind:tempEndTime
                 />
             {/if}
+
             {#each workout.data.exercises as _, i (i)}
-                <ExerciseRow bind:exercise={workout.data.exercises[i]} {editMode} />
+                <ExerciseCard index={i} bind:exercise={workout.data.exercises[i]} {editMode} />
             {/each}
         {/if}
 

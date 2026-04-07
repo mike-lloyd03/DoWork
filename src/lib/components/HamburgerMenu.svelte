@@ -1,11 +1,16 @@
 <script lang="ts">
     import { Menu } from "@lucide/svelte";
+    import type { Component } from "svelte";
 
     interface Props {
+        id: string;
         items: { text: string; action: () => void }[];
+        Icon?: Component;
+        btnClasses?: string;
+        disabled?: boolean;
     }
 
-    let { items }: Props = $props();
+    let { id, items, Icon, btnClasses, disabled }: Props = $props();
 
     let popoverElement: HTMLUListElement | undefined = $state();
 
@@ -14,15 +19,24 @@
     }
 </script>
 
-<button class="btn" popovertarget="popover-1" style="anchor-name:--anchor-1">
-    <Menu />
+<button
+    class="btn {btnClasses}"
+    popovertarget={disabled ? undefined : `popover-${id}`}
+    style={`anchor-name:--anchor-${id}`}
+>
+    {#if Icon}
+        <Icon />
+    {:else}
+        <Menu />
+    {/if}
 </button>
+
 <ul
     bind:this={popoverElement}
     class="dropdown menu rounded-box bg-base-100 w-52 shadow-sm"
     popover
-    id="popover-1"
-    style="position-anchor:--anchor-1"
+    id={`popover-${id}`}
+    style={`position-anchor:--anchor-${id}`}
 >
     {#each items as item}
         <li>
