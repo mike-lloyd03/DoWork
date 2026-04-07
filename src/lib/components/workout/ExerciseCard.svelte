@@ -4,15 +4,20 @@
     import { Dumbbell } from "@lucide/svelte";
     import EditWeightModal from "./EditWeightModal.svelte";
     import Card from "../Card.svelte";
+    import HamburgerMenu from "../HamburgerMenu.svelte";
+    import SelectExerciseModal from "./SelectExerciseModal.svelte";
 
     interface Props {
+        index: number;
         exercise: Exercise;
         editMode?: boolean;
     }
 
-    let { exercise = $bindable(), editMode }: Props = $props();
+    let { index, exercise = $bindable(), editMode }: Props = $props();
 
     let showEditWeightModal = $state(false);
+    let showSelectExerciseModal = $state(false);
+    let exerciseID = $derived(`exercise-${index}`);
 
     function toggleSet(index: number, setType: "working" | "warmup") {
         if (!editMode) {
@@ -90,9 +95,21 @@
     <div class="card-body p-4">
         <div class="mb-4 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="bg-primary/10 text-primary rounded-lg p-2">
-                    <Dumbbell size={20} />
-                </div>
+                <HamburgerMenu
+                    id={exerciseID}
+                    items={[
+                        {
+                            text: "Replace Exercise",
+                            action: () => {
+                                showSelectExerciseModal = true;
+                            },
+                        },
+                    ]}
+                    Icon={Dumbbell}
+                    btnClasses="bg-primary/10 text-primary"
+                    disabled={!editMode}
+                />
+
                 <h3 class="text-lg font-bold">{liftDisplayName(exercise.lift)}</h3>
             </div>
 
@@ -131,3 +148,5 @@
 </div>
 
 <EditWeightModal bind:show={showEditWeightModal} bind:exercise />
+
+<SelectExerciseModal bind:open={showSelectExerciseModal} bind:exercise />
