@@ -4,6 +4,7 @@
     import type { PageProps } from "./$types";
     import { Workout, type WorkoutModel } from "$lib/database/Workout.svelte";
     import WorkoutExercise from "$lib/components/WorkoutExercise.svelte";
+    import PageTitle from "$lib/components/PageTitle.svelte";
 
     let { data }: PageProps = $props();
 
@@ -26,23 +27,7 @@
 </script>
 
 <div class="space-y-6 p-4 pb-24">
-    <div class="navbar bg-base-100 rounded-box min-h-16 shadow-sm">
-        <div class="flex-1">
-            <a
-                href={resolve("/")}
-                class="btn btn-ghost text-primary text-xl font-black tracking-tighter"
-            >
-                DoWork
-            </a>
-        </div>
-        <div class="flex-none gap-2">
-            <div class="avatar placeholder">
-                <div class="bg-neutral text-neutral-content w-10 rounded-full">
-                    <span class="text-xs">ME</span>
-                </div>
-            </div>
-        </div>
-    </div>
+    <PageTitle title="DoWork" />
 
     {#if nextWorkout}
         <div class="card bg-base-100 border-primary border-t-4 shadow-xl">

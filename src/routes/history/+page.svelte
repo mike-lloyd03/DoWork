@@ -5,6 +5,7 @@
     import { resolve } from "$app/paths";
     import { formatDuration } from "$lib/utils";
     import AddWorkoutModal from "$lib/components/AddWorkoutModal.svelte";
+    import PageTitle from "$lib/components/PageTitle.svelte";
 
     let { data }: PageProps = $props();
 
@@ -52,14 +53,7 @@
 </script>
 
 <div class="space-y-4 p-4 pb-24">
-    <div class="navbar bg-base-100 rounded-box min-h-16 shadow-sm">
-        <div class="flex-1">
-            <h1 class="text-primary px-2 text-xl font-black tracking-tighter uppercase">History</h1>
-        </div>
-        <div class="text-base-content/60 flex-none font-mono text-sm">
-            {history.length} Workouts
-        </div>
-    </div>
+    <PageTitle title="History" altText="{history.length} Workouts" />
 
     {#if history.length === 0}
         <div class="hero bg-base-200 rounded-box min-h-[50vh]">
