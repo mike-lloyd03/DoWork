@@ -21,8 +21,9 @@
 
 <button
     class="btn {btnClasses}"
-    popovertarget={disabled ? undefined : `popover-${id}`}
+    popovertarget="popover-{id}"
     style={`anchor-name:--anchor-${id}`}
+    {disabled}
 >
     {#if Icon}
         <Icon />
@@ -35,7 +36,7 @@
     bind:this={popoverElement}
     class="dropdown menu rounded-box bg-base-100 w-52 shadow-sm"
     popover
-    id={`popover-${id}`}
+    id="popover-{id}"
     style={`position-anchor:--anchor-${id}`}
 >
     {#each items as item}
