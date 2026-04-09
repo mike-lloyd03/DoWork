@@ -1,3 +1,7 @@
+<script context="module">
+    let idCounter = 0;
+</script>
+
 <script lang="ts">
     import { Workout, type Exercise, type Lift } from "$lib/database/Workout.svelte";
     import { liftDisplayName } from "$lib/utils";
@@ -8,6 +12,8 @@
     }
 
     let { open = $bindable(), exercise = $bindable() }: Props = $props();
+
+    const instanceId = idCounter++;
 
     let selectedLift: Lift | undefined = $state();
     let searchFilter = $state("");
@@ -45,22 +51,23 @@
             <input placeholder="Search..." bind:value={searchFilter} class="input w-full" />
             <div class="flex flex-col gap-2 overflow-y-auto">
                 {#each filteredLifts as lift}
-                    <div class="">
+                    <div class="w-full">
                         <label
-                            for={lift}
-                            class="btn btn-active w-full"
+                            for="radio-{instanceId}-{lift}"
+                            class="btn w-full"
+                            class:btn-active={selectedLift !== lift}
                             class:btn-secondary={selectedLift === lift}
                         >
                             <input
                                 type="radio"
-                                id={lift}
-                                name="lift"
+                                id="radio-{instanceId}-{lift}"
+                                name="lift_selection"
                                 value={lift}
                                 bind:group={selectedLift}
-                                class="hidden"
+                                class="sr-only"
                             />
-                            {liftDisplayName(lift)}</label
-                        >
+                            {liftDisplayName(lift)}
+                        </label>
                     </div>
                 {/each}
             </div>
