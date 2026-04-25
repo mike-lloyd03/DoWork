@@ -1,7 +1,7 @@
 <script lang="ts">
     import "../app.css";
     import { page } from "$app/state";
-    import { Dumbbell, CalendarDays, Settings } from "@lucide/svelte";
+    import { Dumbbell, CalendarDays, Settings, TrendingUp } from "@lucide/svelte";
     import { resolve } from "$app/paths";
     import Toast from "$lib/components/Toast.svelte";
 
@@ -30,6 +30,11 @@
         <a href={resolve("/history")} class:dock-active={isActive("/history")}>
             <CalendarDays size={24} strokeWidth={isActive("/history") ? 2.5 : 2} />
             <span class="dock-label">History</span>
+        </a>
+
+        <a href={resolve("/progress")} class:dock-active={isActive("/progress")}>
+            <TrendingUp size={24} strokeWidth={isActive("/progress") ? 2.5 : 2} />
+            <span class="dock-label">Progress</span>
         </a>
 
         <a href={resolve("/settings")} class:dock-active={isActive("/settings")}>
