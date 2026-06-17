@@ -1,5 +1,6 @@
 import 'package:dowork/data/dummy_data.dart';
 import 'package:dowork/models/workout.dart';
+import 'package:dowork/screens/workout_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -90,7 +91,11 @@ class _NextWorkoutCard extends StatelessWidget {
             SizedBox(height: 16),
 
             FilledButton.icon(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => WorkoutScreen()));
+              },
               icon: const Icon(Icons.play_arrow),
               label: Text(isActive ? "Resume Workout" : "Start Workout"),
               style: FilledButton.styleFrom(
