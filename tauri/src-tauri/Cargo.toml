@@ -26,3 +26,8 @@ tauri-plugin-sql = { version = "2", features = ["sqlite"] }
 tauri-plugin-fs = "2"
 tauri-plugin-dialog = "2"
 
+# Android's SAF content:// URIs aren't reliably writable via tauri-plugin-fs,
+# so file export goes through this Android-only plugin instead.
+[target.'cfg(target_os = "android")'.dependencies]
+tauri-plugin-android-fs = "28"
+

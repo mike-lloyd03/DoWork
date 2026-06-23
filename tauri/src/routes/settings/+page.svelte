@@ -13,8 +13,7 @@
     import { DateTime } from "luxon";
     import { Workout } from "$lib/database/Workout.svelte";
     import { showToast } from "$lib/appState.svelte";
-    import { writeFile } from "@tauri-apps/plugin-fs";
-    import { save } from "@tauri-apps/plugin-dialog";
+    import { invoke } from "@tauri-apps/api/core";
 
     // Mock Settings State
     let settings = $state({
@@ -34,21 +33,17 @@
     async function exportData() {
         exporting = true;
         try {
-            const path = await save({
-                defaultPath: `dowork-export-${DateTime.now().toFormat("yyyy-MM-dd")}.json`,
-                filters: [{ name: "JSON", extensions: ["json"] }],
-            });
-
-            if (path === null) return;
-
             const workouts = await Workout.getAll();
             const payload = workouts.map((w) => w.data);
             const json = JSON.stringify(payload, null, 2);
+            const fileName = `dowork-export-${DateTime.now().toFormat("yyyy-MM-dd")}.json`;
 
-            // .slice() copies into a fresh ArrayBuffer so Tauri IPC sees correct bounds
-            const encoded = new TextEncoder().encode(json).slice();
+            // The save dialog + write happen on the Rust side via
+            // tauri-plugin-android-fs so the bytes actually land in the
+            // SAF-selected file (plugin-fs writes 0 bytes to content:// URIs).
+            const saved = await invoke<boolean>("export_workouts", { fileName, json });
+            if (!saved) return; // user cancelled
 
-            await writeFile(path, encoded);
             showToast(`Exported ${workouts.length} workouts`, "success");
         } catch (e) {
             console.error("Export error:", e);
